@@ -99,5 +99,135 @@ my implementation of these problems have changed as you go down the list.
  7. Update the pixels and display
  8. End procedure.
  
+ ## Code
  
+ ### Draw Points
+ ```cpp
+ void drawPoints(uint32_t(*pixels)[SCREEN_WIDTH]) {
+	int numPoints;
+	cout << "Number of points (1-5)? ";
+	while (!(cin >> std::dec >>numPoints) || numPoints > 5 || numPoints < 1) {
+		cin.clear();
+		cin.ignore(100, '\n');
+		cout << "Invalid input. Try Again.\n";
+		cout << "Number of points (1-5)? ";
+	}
+	int x, y;
+	for (int i = 1; i <= numPoints; i++) {
+		cout << "Point " << i << ": ";
+		while (!(cin >> std::dec >> x >> std::dec >> y)
+			|| x > SCREEN_WIDTH 
+			|| x < 0
+			|| y > SCREEN_HEIGHT 
+			|| y < 0) {
+			cin.clear();
+			cin.ignore(100, '\n');
+			cout << "ERROR: Please make sure the x <= "<< SCREEN_WIDTH << " and y <= "<< SCREEN_HEIGHT<<"\n";
+			cout << "Point " << i << ": ";
+		}
+
+		//show the point on the pixels array
+		pixels[y][x] = pickColor();
+	}
+}
+```
+
+### Draw Line
+```cpp
+size_t* drawLine(uint32_t(*pixels)[SCREEN_WIDTH], int xi, int yi, int xf, int yf, uint32_t colour) {
+	if (xf < xi) {
+		int temp = xi;
+		xi = xf;
+		xf = temp;
+
+		temp = yi;
+		yi = yf;
+		yf = temp;
+	}
+	double m;
+	double c;
+
+	size_t *linePos = new size_t[SCREEN_WIDTH];
+	for (int i = 0; i < SCREEN_WIDTH; i++) {
+		linePos[i] = NULL;
+	}
  
+	if (xi == xf) {
+		m = 0;
+		c = yf;
+		for (size_t yPos = yi; yPos <= yf; yPos++) {
+			linePos[xi] = yPos;
+			pixels[yPos][xi] = colour;
+		}
+
+	}
+	else {
+		m = ((double)yf - (double)yi) / ((double)xf - (double)xi);
+		c = yf - (m*xf);
+		for (size_t xPos = xi; xPos <= xf; xPos++) {
+			unsigned int yPos = static_cast<unsigned int>(round((m*xPos) + c));
+			//Once yPos found assign it to the array
+			linePos[xPos] = yPos;
+			pixels[yPos][xPos] = colour;
+		}
+	}
+	return linePos;
+}
+```
+### Rotate Points
+```cpp
+void rotatePoint( uint32_t(*pixels)[SCREEN_WIDTH], double degree, size_t object[SCREEN_WIDTH]) {
+
+	int midX, midY;
+	midX = (SCREEN_WIDTH / 2) - 1;
+	midY = (SCREEN_HEIGHT / 2) - 1;
+		
+	double theta = (degree * PI) / 180.0;
+	for (int x = 0; x < SCREEN_WIDTH; x++) {
+		if (object[x] != NULL) {
+			int y = (int) object[x];
+			double xPrime;
+			double yPrime;
+			xPrime = (cos(theta)*((double) x-midX)) - (sin(theta)*((double) y-midY));
+			yPrime = (sin(theta)*((double) x-midX)) + (cos(theta)*((double) y-midY));
+
+			int xFinal = (int) (xPrime + midX);
+			int yFinal = (int) (yPrime + midY);
+		
+			//if the rotated points lie within the bounds of the pixelsArray then add them
+			if (yFinal < SCREEN_HEIGHT && xFinal < SCREEN_WIDTH
+				&& yFinal >= 0 && xFinal >= 0) {
+				pixels[yFinal][xFinal] = 0xFF0000FF;
+			}
+		}
+		
+
+		
+	}
+	pixels[(SCREEN_HEIGHT / 2) - 1][(SCREEN_WIDTH / 2) - 1] = 0x000000FF;
+}
+```
+
+### Draw Circle
+```cpp
+void drawCircle(uint32_t(*pixels)[SCREEN_WIDTH], int centerX, int centerY, int radius, uint32_t colour, int scaleX, int scaleY) {
+	int xTop, xBottom, yTop, yBottom;
+	int yRadius = radius * scaleY;
+	int xRadius = radius * scaleX;
+
+	//Go through the circle and find the x, y and opposite x coordinate
+	for (double i = 0; i < 360; i+= 0.1) {
+		xTop =  checkBoundsX((int) (xRadius * cos(i*(PI/180.0))) + centerX);
+		yTop = checkBoundsY((int) (yRadius * sin(i*(PI / 180.0))) + centerY);
+
+		xBottom = checkBoundsX((int) abs((xRadius * cos(0-(i*(PI / 180.0)))) - centerX));
+		yBottom = yTop;
+
+		//Draw a line connecting the points
+		drawLine(pixels, xTop, yTop, xBottom, yBottom, colour);
+		
+	}
+	//Mark the circle center incase
+	pixels[centerY][centerX] = 0x000000FF;
+}
+```
