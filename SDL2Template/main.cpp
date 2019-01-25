@@ -355,7 +355,7 @@ int main(int argc, char* args[]) {
 		if (choice == 1) {
 			//Call method to record user input and update the pixel values
 			drawPoints(pixels);
-
+			while (SDL_PollEvent(&Event));
 			//Update screen with changes
 			updateScene(texture, canvas, renderer);
 		}
@@ -420,7 +420,7 @@ int main(int argc, char* args[]) {
 			cout << "Translating line x=" << transX << ", y=" << transY <<" ..\n";
 
 			//Call the translate object method and store the newline value
-			size_t *newline = translateObject(pixels, line, transX, transY);
+			size_t *newline = drawLine(pixels, xi +transX, yi+transY, xf+transX, yf+transY, 0x0000FFFF);
 			cout << "The translation has been applied.\n";
 		
 			//Update the scene
